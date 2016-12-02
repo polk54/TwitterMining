@@ -1,0 +1,65 @@
+# After using "setup" to pull "tweets.df"
+# using text mining to clean data from the 1000 tweets
+# reference: https://www.r-bloggers.com/analyzing-the-us-election-using-twitter-and-meta-data-in-r/
+
+#Load packages
+library(tm)
+library (SnowballC)
+library(ggplot2)
+
+# See what class tweet.df is (created in the twitter extracts2)
+class(tweets.df)
+#data.frame
+
+# saved entire thing as .csv
+write.csv(tweets.df, "maga.csv")
+
+sum(tweets.df$isRetweet)
+
+
+#Creates the corpus from the tweets.df
+d <- Corpus(VectorSource(tweets.df$text))
+d <- tm_map(d,
+                   content_transformer(function(x) iconv(x, to='UTF-8-MAC', sub='byte')),
+                   mc.cores=1)
+d <- tm_map(d, removeWords, c("the","and", "you", "for", "that", "not", "has", "who", "are", "will", "did", "all", "this", "...", "some", "our", "cause", "#maga", "https…", "httpst…", "@lvnancy")) 
+
+
+# (having trouble getting these text cleaning functions to run)
+#a <- tm_map(a, content_transformer(tolower), lazy = TRUE)
+#a <- tm_map(a, stemDocument, lazy = TRUE)
+#a <- tm_map(a, removeWords, stopwords("english"), mc.cores =1, lazy = TRUE)
+#a <- tm_map(a, PlainTextDocument, mc.cores = 1, lazy = TRUE)
+
+# creating the termdocumentmatrix and the documenttermmatrix
+tdmd <- TermDocumentMatrix(d)
+dtmd <- DocumentTermMatrix(d)
+
+#create the word/frequency matrix
+freqd <- colSums(as.matrix(dtmd))   
+length(freqd)
+ordd <- order(freqd)
+md <- as.matrix(dtmd)  
+
+#look at the most frequent terms
+dtmsd <- removeSparseTerms(dtmd, 0.1)   
+inspect(dtmsd)
+freqd <- sort(colSums(as.matrix(dtmd)), decreasing=TRUE)   
+head(freqd, 14)
+findFreqTerms(dtmd, lowfreq=50) 
+
+#creates a data frame of the word and frequency
+wfd <- data.frame(word=names(freqd), freqd=freqd)   
+head(wfd)
+
+# create a plot
+p <- ggplot(subset(wfd, freq>50), aes(word, freqd))    
+p <- p + geom_bar(stat="identity")   
+p <- p + theme(axis.text.x=element_text(angle=45, hjust=1))   
+p  
+
+
+findAssocs(dtmd, c("police"), corlimit=0.7)
+#because the cleaning functions aren't working there are still a lot of "..." and "@lvnancy" words that we don't want
+
+class(wfd)

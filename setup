@@ -1,35 +1,24 @@
-# reference: https://www.credera.com/blog/business-intelligence/twitter-analytics-using-r-part-1-extract-tweets/
+# reference: http://bogdanrau.com/blog/collecting-tweets-using-r-and-the-twitter-search-api/
 
-# Install required packages
-install.packages("twitteR")
-install.packages("ROAuth")
-library("twitteR")
-library("ROAuth")
+# Install and Activate Packages
+install.packages("twitteR", "RCurl", "RJSONIO", "stringr")
+library(twitteR)
 
-setwd("XXXX")
+getwd()
+#"/Users/parulagarwal/Documents/R/Work"
 
-# Download "cacert.pem" file
-download.file(url="http://curl.haxx.se/ca/cacert.pem",destfile="cacert.pem")
+# Declare Twitter API Credentials
+api_key <- "XXXX" 
+api_secret <- "XXXX" 
+token <- "XXXX" 
+token_secret <- "XXXX" 
 
-#create an object "cred" that will save the authenticated object that we can use for later sessions
-cred <- OAuthFactory$new(consumerKey='XXXX',
-                         consumerSecret='XXXX',
-                         requestURL='https://api.twitter.com/oauth/request_token',
-                         accessURL='https://api.twitter.com/oauth/access_token',
-                         authURL='https://api.twitter.com/oauth/authorize')
+# Create Twitter Connection
+setup_twitter_oauth(api_key, api_secret, token, token_secret)
 
-# Executing the next step generates an output, Note:  You only need to do this part once
-cred$handshake(cainfo="cacert.pem")
-#XXXX
-#save for later use for Windows
-save(cred, file="twitter authentication.Rdata")
+#Run Twitter Search
+# ex: tweets <- searchTwitter("Obamacare OR ACA OR 'Affordable Care Act' OR #ACA", n=100, lang="en", since="2014-08-20")
+MAGA <- searchTwitter ("#MAGA", n=1000)
 
-load("twitter authentication.Rdata")
-registerTwitterOAuth(cred)
-?setup_twitter_oauth
-
-# example of a search
-search.string <- "#nba"
-no.of.tweets <- 100
-tweets <- searchTwitter(search.string, n=no.of.tweets, cainfo="cacert.pem", lang="en")
-tweets
+#Transform tweets list into a data frame
+tweets.df <- twListToDF(MAGA)
